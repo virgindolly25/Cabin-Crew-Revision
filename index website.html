@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crew Revision — Security</title>
+<style>
+:root{
+  --navy:#10243e;
+  --blue:#1d5f91;
+  --light:#f4f7fa;
+  --white:#fff;
+  --green:#18865b;
+  --red:#c94a4a;
+  --gold:#e8b44c;
+  --text:#17212b;
+  --muted:#687785;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:linear-gradient(145deg,#eef4f8,#f9fbfc);color:var(--text);min-height:100vh;
+}
+header{
+  background:var(--navy);color:white;padding:24px 18px 20px;text-align:center;
+}
+header .plane{font-size:30px;margin-bottom:5px}
+header h1{margin:0;font-size:25px}
+header p{margin:5px 0 0;opacity:.78;font-size:14px}
+.container{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+.card{
+  background:var(--white);border-radius:20px;padding:24px;
+  box-shadow:0 8px 30px rgba(16,36,62,.08);
+}
+.progress-wrap{margin-bottom:22px}
+.progress-top{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-bottom:8px}
+.progress{height:8px;background:#e6edf2;border-radius:10px;overflow:hidden}
+.progress-bar{height:100%;background:var(--blue);transition:width .3s ease}
+.category{display:inline-block;background:#e9f1f7;color:var(--blue);font-weight:700;font-size:12px;padding:6px 10px;border-radius:20px;margin-bottom:15px}
+.question{font-size:21px;line-height:1.35;margin:0 0 20px;font-weight:700}
+.answers{display:grid;gap:11px}
+.answer{
+  width:100%;text-align:left;background:white;border:2px solid #dce5eb;border-radius:13px;
+  padding:14px 15px;font-size:15px;cursor:pointer;transition:.15s;
+}
+.answer:hover{border-color:var(--blue);background:#f7fbfe}
+.answer:disabled{cursor:default}
+.answer.correct{border-color:var(--green);background:#eaf8f1;color:#116440}
+.answer.wrong{border-color:var(--red);background:#fff0f0;color:#a73535}
+.feedback{
+  display:none;margin-top:17px;padding:15px;border-radius:13px;line-height:1.45;font-size:14px;
+}
+.feedback.show{display:block}
+.feedback.correct{background:#eaf8f1;border:1px solid #b9e5cf}
+.feedback.wrong{background:#fff0f0;border:1px solid #efc1c1}
+.feedback strong{display:block;margin-bottom:4px}
+.next{
+  display:none;width:100%;margin-top:15px;border:0;border-radius:13px;padding:15px;
+  background:var(--navy);color:white;font-size:16px;font-weight:700;cursor:pointer;
+}
+.next.show{display:block}
+.start{text-align:center}
+.start h2{font-size:27px;margin:5px 0 8px}
+.start p{color:var(--muted);line-height:1.55}
+.primary{
+  border:0;border-radius:13px;background:var(--blue);color:white;padding:15px 25px;
+  font-size:16px;font-weight:700;cursor:pointer;margin-top:10px;
+}
+.results{text-align:center}
+.score-circle{
+  width:130px;height:130px;border-radius:50%;background:#eef4f8;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;margin:10px auto 20px;
+}
+.score-circle .number{font-size:35px;font-weight:800;color:var(--navy)}
+.score-circle .small{font-size:12px;color:var(--muted)}
+.result-message{font-size:18px;font-weight:700;margin-bottom:8px}
+.result-detail{color:var(--muted);margin-bottom:22px}
+.review{margin-top:20px;text-align:left}
+.review-item{padding:15px 0;border-top:1px solid #e5ebef}
+.review-q{font-weight:700;line-height:1.4}
+.review-a{font-size:14px;color:var(--muted);margin-top:7px}
+.restart{background:#fff;color:var(--navy);border:2px solid #d9e2e8}
+.note{font-size:12px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5}
+@media(max-width:500px){
+  .card{padding:19px;border-radius:17px}
+  .question{font-size:19px}
+  header{padding:20px 15px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="plane">✈️</div>
+  <h1>Crew Revision</h1>
+  <p>Security • Practice Quiz</p>
+</header>
+
+<div class="container">
+  <div id="app"></div>
+</div>
+
+
+<script>
+const airbusQuestions = ["It the flight deck door cannot be opened in an emergency, the secondary evacuation route is:", "On the A330-900, the L/R3 doors are equipped with what type of escape device?", "You need to exit the A350 flight deck using the escape hatch in the ceiling. After removing the ceiling panel, you grab and pull down on the release handle, how do you open the hatch?", "Smoke detector warnings have activated and all AIPs display 'SMOKE LAV 54'. Which toilet is affected?", "Pre-flight, CSSs should ensure that cart chillers are switched on in the galleys. When should they be switched off?", "On the A330-900, how would you isolate the galley power to the entire galley?", "Pre-flight, CSSs should ensure that cart chillers are switched on in the galleys. When should they be switched off?", "On the A330-900, how would you isolate the galley power to the entire galley?", "On the A350, while securing the Upper Class cabin for take off, you notice a passenger has a small, lightweight item inside the ottoman recess and also a can of water on the display shelf, what is the correct action to take?", "Where will you locate the slats?", "On the A350 and the A330-300, where does the Flight Service Manager (FSM) sit for take-off and landing?", "To prevent an incapacitated pilot from falling forwards, you should attach their shoulder harness and then:", "On the A330-900, when checking the freon gas outlet/s are not obstructed in the Combined Crew Rest area (CCR) during the pre-flight check, how many outlet/s need to be checked?", "On the A350, how do you exit from the Flight Crew Rest area (FCR) or Cabin Crew Rest?"];
+function renderAirbus(){
+ document.getElementById("app").innerHTML = `
+ <div class="card">
+   <div class="category">AIRBUS</div>
+   <h2 class="question">Airbus Question Bank</h2>
+   <p style="color:var(--muted);line-height:1.5">These questions have been added to your revision bank. Answers have not been added yet, so you can test yourself and add the official answers later.</p>
+   <div class="answers">
+     ${airbusQuestions.map((q,i)=>`
+       <button class="answer" onclick="this.nextElementSibling.classList.toggle('show')">${i+1}. ${q}</button>
+       <div class="feedback" style="margin-top:0;margin-bottom:10px"><strong>Answer not added yet</strong>Add the official answer when you have it.</div>
+     `).join("")}
+   </div>
+   <button class="next show" onclick="renderStart()">← Back to Home</button>
+ </div>`;
+}
+</script>
+
+<script>
+const questions = [
+{
+ q:"Who sets the UK threat level for aviation?",
+ options:[
+ "The Civil Aviation Authority (CAA)",
+ "The Joint Terrorism Analysis Centre (JTAC)",
+ "The Home Office",
+ "The Department for Transport"
+ ],
+ answer:1,
+ explanation:"The Joint Terrorism Analysis Centre (JTAC) sets the UK threat level for aviation."
+},
+{
+ q:"A 'Severe' threat level means an attack is:",
+ options:["Possible","Likely","Imminent","Unlikely"],
+ answer:2,
+ explanation:"According to your revision material, a Severe threat level means an attack is imminent."
+},
+{
+ q:"If either ID (Airport/VAA) is lost or stolen, what action must crew take?",
+ options:[
+ "Wait until the next duty to report it",
+ "Report it immediately to their supervisor and the relevant authorities",
+ "Only report it if it is found to have been used",
+ "Ask another crew member to replace it"
+ ],
+ answer:1,
+ explanation:"The crew must report the loss or theft immediately to their supervisor and the relevant authorities."
+},
+{
+ q:"During boarding a passenger is acting suspiciously. What are the cabin crew's first actions?",
+ options:[
+ "Confront the passenger immediately",
+ "Ignore the behaviour unless they become aggressive",
+ "Observe the passenger discreetly, do not alert them, and report observations to the flight deck or security personnel",
+ "Ask other passengers what they think"
+ ],
+ answer:2,
+ explanation:"Observe discreetly without alerting the passenger, then report your observations to the flight deck or security personnel."
+},
+{
+ q:"Inflight, a prohibited article such as a meat cleaver or machete is discovered that could be used as a threat. What are the immediate actions of the cabin crew?",
+ options:[
+ "Leave it where it was found and continue service",
+ "Secure the item if safe to do so, inform the flight deck, and follow established procedures for threat management",
+ "Give it to the passenger who owns it",
+ "Hide it without informing anyone"
+ ],
+ answer:1,
+ explanation:"Secure the item if safe to do so, inform the flight deck, and follow the established threat-management procedures."
+},
+{
+ q:"A passenger has been offloaded due to feeling unwell. What must happen before departure?",
+ options:[
+ "Nothing, if the passenger has left the gate",
+ "The passenger's baggage must be located and removed from the aircraft",
+ "The passenger's seat must simply be left empty",
+ "The passenger must be allowed back onboard"
+ ],
+ answer:1,
+ explanation:"The passenger's baggage must be located and removed from the aircraft before departure."
+},
+{
+ q:"As operating crew, which of the following is correct when taking a companion?",
+ options:[
+ "A companion can travel without any authorization",
+ "The companion can interfere with crew duties if needed",
+ "The specific procedure depends on airline policy, but generally involves proper authorization and ensuring the companion does not interfere with crew duties",
+ "Any passenger can be nominated as a companion"
+ ],
+ answer:2,
+ explanation:"Your material states that the procedure depends on airline policy and generally requires proper authorization while ensuring the companion does not interfere with crew duties."
+},
+{
+ q:"During boarding, a cabin crew member notices that an Engineer does not have their ID visible when attempting to board the aircraft. What actions should the crew member take?",
+ options:[
+ "Allow them onboard because they are an Engineer",
+ "Prevent the Engineer from boarding and request that they present valid identification",
+ "Ask a passenger to confirm their identity",
+ "Ignore it if they appear familiar"
+ ],
+ answer:1,
+ explanation:"The crew member should prevent the Engineer from boarding and request valid identification."
+},
+{
+ q:"When building the Least Risk Bomb Location (LRBL), having discovered a suspicious item, how far around the device at the R4 door would you build?",
+ options:[
+ "Use the distance specified by the applicable company/security procedure and the nature of the item",
+ "Always use exactly 1 metre",
+ "Always use exactly 2 metres",
+ "No area is required around the item"
+ ],
+ answer:0,
+ explanation:"Your supplied material does not give a fixed distance. It states that the exact distance is determined by specific safety protocols and the nature of the item."
+},
+{
+ q:"An item discovered inflight has been deemed suspicious, and an immediate landing is possible. What is the correct procedure?",
+ options:[
+ "Secure the item, inform the flight deck, and prepare the cabin for an emergency landing according to established protocols",
+ "Move the item to the galley and continue service",
+ "Open the item to identify it",
+ "Tell passengers to investigate it"
+ ],
+ answer:0,
+ explanation:"The supplied revision answer is to secure the item, inform the flight deck, and prepare the cabin for an emergency landing according to established protocols."
+},
+{
+ q:"What type of behaviour would be classed as a Level 2 threat?",
+ options:[
+ "A passenger who is completely cooperative",
+ "Disruptive behaviour that interferes with crew duties or flight safety but does not involve direct physical aggression",
+ "Any passenger who asks a question",
+ "A minor service request"
+ ],
+ answer:1,
+ explanation:"A Level 2 threat typically involves disruptive behaviour that interferes with crew duties or flight safety but does not involve direct physical aggression."
+},
+{
+ q:"A passenger has spat at another passenger. What level of threat is this classified as?",
+ options:["Level 1","Level 2","Level 3","Level 4"],
+ answer:1,
+ explanation:"According to your supplied revision material, spitting at another passenger is classified as a Level 2 threat."
+}
+];
+
+let current=0, score=0, answered=false, userAnswers=[];
+
+function renderStart(){
+ document.getElementById("app").innerHTML=`
+ <div class="card start">
+   <div class="category">SECURITY</div>
+   <h2>Security Revision</h2>
+   <p>Test yourself on ${questions.length} security questions. Choose an answer to see immediate feedback, then move on to the next question.</p>
+   <button class="primary" onclick="startQuiz()">Start Quiz</button><button class="primary restart" onclick="renderAirbus()">✈️ Airbus Question Bank</button>
+   <div class="note">Your progress and score are kept only in this page while you use it.</div>
+ </div>`;
+}
+function startQuiz(){current=0;score=0;userAnswers=[];renderQuestion();}
+function renderQuestion(){
+ answered=false;
+ const q=questions[current];
+ const pct=(current/questions.length)*100;
+ document.getElementById("app").innerHTML=`
+ <div class="card">
+   <div class="progress-wrap">
+     <div class="progress-top"><span>Question ${current+1} of ${questions.length}</span><span>${score} correct</span></div>
+     <div class="progress"><div class="progress-bar" style="width:${pct}%"></div></div>
+   </div>
+   <div class="category">SECURITY</div>
+   <h2 class="question">${q.q}</h2>
+   <div class="answers">
+     ${q.options.map((o,i)=>`<button class="answer" onclick="choose(${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join("")}
+   </div>
+   <div id="feedback" class="feedback"></div>
+   <button id="next" class="next" onclick="nextQuestion()">${current===questions.length-1?"See Results":"Next Question"} →</button>
+ </div>`;
+}
+function choose(i){
+ if(answered)return;
+ answered=true;
+ const q=questions[current];
+ userAnswers[current]=i;
+ const buttons=document.querySelectorAll(".answer");
+ buttons.forEach((b,idx)=>{
+   b.disabled=true;
+   if(idx===q.answer)b.classList.add("correct");
+   if(idx===i && i!==q.answer)b.classList.add("wrong");
+ });
+ const fb=document.getElementById("feedback");
+ const correct=i===q.answer;
+ if(correct)score++;
+ fb.className="feedback show "+(correct?"correct":"wrong");
+ fb.innerHTML=`<strong>${correct?"✓ Correct!":"✗ Not quite"}</strong>${q.explanation}`;
+ document.getElementById("next").classList.add("show");
+}
+function nextQuestion(){
+ if(current<questions.length-1){current++;renderQuestion();}else renderResults();
+}
+function renderResults(){
+ const pct=Math.round(score/questions.length*100);
+ let msg=pct>=90?"Excellent work!":pct>=75?"Great job!":pct>=60?"Good effort — keep revising!":"Keep practising — you’ll get there!";
+ document.getElementById("app").innerHTML=`
+ <div class="card results">
+   <div class="category">QUIZ COMPLETE</div>
+   <div class="score-circle"><div class="number">${pct}%</div><div class="small">${score}/${questions.length} correct</div></div>
+   <div class="result-message">${msg}</div>
+   <div class="result-detail">You've completed the Security revision quiz.</div>
+   <button class="primary" onclick="startQuiz()">Try Again</button>
+   <button class="primary restart" onclick="renderStart()">Back to Home</button>
+   <div class="review">
+     <h3>Review</h3>
+     ${questions.map((q,i)=>{
+       const ua=userAnswers[i];
+       const ok=ua===q.answer;
+       return `<div class="review-item">
+         <div class="review-q">${i+1}. ${q.q}</div>
+         <div class="review-a">${ok?"✓":"✗"} Your answer: ${q.options[ua]}</div>
+         ${!ok?`<div class="review-a">Correct answer: ${q.options[q.answer]}</div>`:""}
+       </div>`;
+     }).join("")}
+   </div>
+ </div>`;
+}
+renderStart();
+</script>
+</body>
+</html>
